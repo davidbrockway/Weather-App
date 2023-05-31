@@ -11,6 +11,7 @@ import {
   faEye,
   faCloud,
   faCloudShowersHeavy,
+  faMapMarkerAlt,
 } from "@fortawesome/free-solid-svg-icons";
 
 function WeatherAPI({ city }) {
@@ -24,7 +25,7 @@ function WeatherAPI({ city }) {
       const response = await axios.get(
         `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${API_KEY}`
       );
-      if (response.data.cod === "404") {
+      if (response.data.message === "city not found") {
         setError("City / Town not found");
         setWeather(null);
       } else {
@@ -32,15 +33,24 @@ function WeatherAPI({ city }) {
         setError(null);
       }
     } catch (error) {
-      setError("Error fetching weather data. Please try again.");
+      if (error.response && error.response.status === 404) {
+        setError("City not found, enter valid city name");
+      } else {
+        setError("Error fetching weather data. Please try again.");
+      }
       setWeather(null);
     }
   };
 
   useEffect(() => {
+    let timeoutId = null;
     if (city) {
-      fetchWeather();
+      timeoutId = setTimeout(fetchWeather, 500);
     }
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, [city]);
 
   const getWeatherIcon = (weatherCode) => {
@@ -82,48 +92,42 @@ function WeatherAPI({ city }) {
       {weather ? (
         <div>
           <h2 className="text-lg font-bold mb-4">Weather Details</h2>
-          <p className="mb-2">
+          <div className="flex flex-col items-center mb-2">
+            <FontAwesomeIcon icon={faMapMarkerAlt} className="text-2xl mb-1" />
+            <p>
+              Location: {weather.name}, {weather.sys.country}
+            </p>
+          </div>
+          <div className="flex flex-col items-center mb-2">
             <FontAwesomeIcon
-              icon={faTemperatureHigh}
-              className="mr-2 text-2xl inline-block"
+              icon={getWeatherIcon(weather.weather[0].icon)}
+              className="text-2xl mb-1"
             />
-            Temperature: {weather.main.temp}°C
-          </p>
-          <p className="mb-2">
-            <FontAwesomeIcon
-              icon={faTint}
-              className="mr-2 text-2xl inline-block"
-            />
-            Humidity: {weather.main.humidity}%
-          </p>
-          <p className="mb-2">
-            <FontAwesomeIcon
-              icon={faWind}
-              className="mr-2 text-2xl inline-block"
-            />
-            Wind Speed: {weather.wind.speed}m/s
-          </p>
-          <p className="mb-2">
-            <FontAwesomeIcon
-              icon={faCompass}
-              className="mr-2 text-2xl inline-block"
-            />
-            Wind Direction: {weather.wind.deg}°
-          </p>
-          <p className="mb-2">
+            <p>Temperature: {weather.main.temp}°C</p>
+          </div>
+          <div className="flex flex-col items-center mb-2">
+            <FontAwesomeIcon icon={faTint} className="text-2xl mb-1" />
+            <p>Humidity: {weather.main.humidity}%</p>
+          </div>
+          <div className="flex flex-col items-center mb-2">
+            <FontAwesomeIcon icon={faWind} className="text-2xl mb-1" />
+            <p>Wind Speed: {weather.wind.speed}m/s</p>
+          </div>
+          <div className="flex flex-col items-center mb-2">
+            <FontAwesomeIcon icon={faCompass} className="text-2xl mb-1" />
+            <p>Wind Direction: {weather.wind.deg}°</p>
+          </div>
+          <div className="flex flex-col items-center mb-2">
             <FontAwesomeIcon
               icon={faCompressArrowsAlt}
-              className="mr-2 text-2xl inline-block"
+              className="text-2xl mb-1"
             />
-            Pressure: {weather.main.pressure}hPa
-          </p>
-          <p className="mb-2">
-            <FontAwesomeIcon
-              icon={faEye}
-              className="mr-2 text-2xl inline-block"
-            />
-            Visibility: {weather.visibility / 1000}km
-          </p>
+            <p>Pressure: {weather.main.pressure}hPa</p>
+          </div>
+          <div className="flex flex-col items-center mb-2">
+            <FontAwesomeIcon icon={faEye} className="text-2xl mb-1" />
+            <p>Visibility: {weather.visibility / 1000}km</p>
+          </div>
         </div>
       ) : (
         <p>{error || "Enter Valid City Name"}</p>
