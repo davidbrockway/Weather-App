@@ -16,3 +16,5 @@ A basic React app that displays weather information using Tailwind CSS and the O
 
 Created by David Brockway for Boolean UK Frontend Project
 
+![Alt Text](weather.png)
+
